@@ -32,6 +32,9 @@ export default function CitasPage() {
     <div className='p-5'>
       <div className='flex justify-between mb-7'>
         <h1 className='text-2xl'>Pagina de citas</h1>
+        <div className="flex flex-col gap-2">
+                        <input type="text" name="fecha" className="border rounded-full p-2" placeholder='buscar'/>
+        </div>
         <Link href ="/citas/crear"className='font-bold text-4xl'>
           <IoAddCircleOutline />
         </Link>

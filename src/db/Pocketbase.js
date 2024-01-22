@@ -40,6 +40,12 @@ export async function getServicios(){
     
 }
 
+export async function postCita(data){
+
+    const record = await pb.collection('cita').create(data);
+
+}
+
 export async function postClientes(data){
 
     const record = await pb.collection('cliente').create(data);

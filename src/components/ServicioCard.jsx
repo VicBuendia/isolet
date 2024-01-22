@@ -15,11 +15,6 @@ export default function ServicioCard(props) {
 
       </div>
 
-      <div>
-        <button>Borrar</button>
-
-      </div>
-
     </Link>
   )
 }

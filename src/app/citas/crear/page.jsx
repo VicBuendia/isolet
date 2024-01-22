@@ -1,8 +1,8 @@
-//PÁGINA CLIENTE INDIVIDUAL, HACE EL DELETE Y PUT
+//FORMULARIO PARA EL POST DE CLIENTES
 
 "use client"
 import { postClientes } from "@/db/Pocketbase";
-import { getCita, deleteCita, updateCita, getServicios  } from "@/db/Pocketbase";
+import { getCita, deleteCita, updateCita, getServicios, postCita, getClientes  } from "@/db/Pocketbase";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -14,11 +14,12 @@ export default function CitaPage({params}){
 
     const[cita, setCita] = useState() //
     const[servicios, setServicios] = useState([])
+    const[clientes, setClientes] = useState([])
     const[nuevosServicios, setnuevosServicios] = useState([])
     const[miServicios, setMiServicios] = useState([])
 
     const router = useRouter() 
-  
+    /*
     const cargarCita = async () => {
       const data = await getCita(params.id);
       console.log(data.expand.servicios)
@@ -30,12 +31,17 @@ export default function CitaPage({params}){
         cliente: data.cliente,
         servicios: data.servicios
       })
-    }
+    }*/
 
     const cargarServicios = async () => {
         const datos = await getServicios();
         console.log(datos)
         setServicios(datos)
+      }
+      const cargarClientes = async () => {
+        const datos = await getClientes();
+        console.log(datos)
+        setClientes(datos)
       }
   
     const [formData, setFormData] = useState({
@@ -48,6 +54,8 @@ export default function CitaPage({params}){
 
     const [seleccion, setSeleccion] = useState()
 
+    const [seleccionCliente, setSeleccionCliente] = useState()
+
         // Handle input changes
     const handleInputChange = (event) => {
         const { name, value } = event.target;
@@ -59,14 +67,24 @@ export default function CitaPage({params}){
         
     const handleSubmit = (event) => {
         event.preventDefault()
+        // Creo un nuevo arreglo que solo contenga los id's de los
+        // objetos en nuevosServicios.
+        var arregloDeIds = nuevosServicios.map(function(objeto) {
+            return objeto.id;
+        });
+        
+        // Actualizo el array de servicios en formData.
+        formData.servicios = [...formData.servicios, ...arregloDeIds]
+        formData.cliente = seleccionCliente.id
         console.log(formData)
-        updateCita(params.id,formData)
+        postCita(formData)
         router.push("/citas")
     }
 
     useEffect(()=>{
-      cargarCita()
+      //cargarCita()
       cargarServicios()
+      cargarClientes()
       setIsLoaded(true)
       
     }, [])
@@ -96,6 +114,22 @@ export default function CitaPage({params}){
         setSeleccion({id, nombre})
     }
 
+    const handleSelectChangeCliente = async (event) => {
+        // Obtenemos los datos del option.
+        const id = event.target.value
+        // Obtenemos el data-info, que es una segunda propiedad del option.
+        // La forma de obtenerla es bastante esotérica, así que no le hagas mucho caso
+        // solo di que sí Ahuhuhu.
+        const nombre = event.target.options[event.target.selectedIndex].dataset.info
+
+        console.log(id)
+        console.log(event.target.options[event.target.selectedIndex].dataset.info)
+
+        // Actualizamos la variable selection.
+        // La actualizamos con un objeto que contiene el id y el nombre del servicio.
+        setSeleccionCliente({id, nombre})
+    }
+
     // Aquí sí añadimos la selección a la lista de nuevosServicios.
     function actualizarLista(){
         console.log(seleccion)
@@ -112,7 +146,7 @@ export default function CitaPage({params}){
         setnuevosServicios(nuevoArreglo);
     }
 
-    async function eliminarServicio(id){
+    /*async function eliminarServicio(id){
         console.log(id)
 
         const nuevoArreglo = formData.servicios.filter((el) => el !== id);
@@ -121,11 +155,11 @@ export default function CitaPage({params}){
 
         await updateCita(params.id, formData)
         location.reload();
-    }
+    }*/
 
     // Aquí se manda añaden todos los nuevosServicios al formData, que es lo que
     // se manda a la base de datos.
-    async function AgregarServicios (){
+    async function AgregarServicios (){ //No se usa aqui
         // Creo un nuevo arreglo que solo contenga los id's de los
         // objetos en nuevosServicios.
         var arregloDeIds = nuevosServicios.map(function(objeto) {
@@ -148,11 +182,19 @@ export default function CitaPage({params}){
                 <button onClick={()=>handleDelete(params.id)}>Borrar</button>
             </div>
             <div className="flex flex-col">
-                <h1>Actualizar cita</h1>
+                <h1>Crear cita</h1>
                 <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-2">
                         <label className="font-bold">Nombre:</label>
                         {cita?.expand.cliente?.nombre} {cita?.expand.cliente?.apellido_p} {cita?.expand.cliente?.apellido_m}
+
+                        <select defaultValue={'DEFAULT'} onChange={handleSelectChangeCliente} className="border p-3 rounded-xl">
+                            <option className="text-zinc-500" value="DEFAULT" disabled>Seleccione un cliente ...</option>
+                            {clientes.map((cli)=> (
+                                <option key={cli.id} value={cli.id} data-info={cli.nombre}>{cli.nombre} {cli.apellido_p} {cli.apellido_m}</option>
+                            ))}
+                        </select>
+
                     </div>
                     <div className="flex flex-col gap-2">
                         <label className="font-bold">Fecha:</label>
@@ -169,19 +211,20 @@ export default function CitaPage({params}){
                         <input type="text" name="hora_f" value={formData.hora_f} onChange={handleInputChange}
                         className="border rounded-xl p-3" />
                     </div>
-                    <button type="submit" className="border rounded-xl p-2 bg-zinc-800 text-white">Actualizar Hora</button>
+                    {//<button type="submit" className="border rounded-xl p-2 bg-zinc-800 text-white">Actualizar Hora</button>
+                    }
                 </form>
                 <div>
                     <div className="flex flex-col my-5">
                         <p className="font-bold mb-3">Servicios:</p>
                         <div className="flex flex-col gap-3">
-                            {cita?.expand.servicios?.map((servicio)=>(
+                            {/*cita?.expand.servicios?.map((servicio)=>(
                                 <div key={servicio.id} className="flex justify-between border p-3 rounded-xl">
                                     <p>{servicio.nombre}</p>
                                     <button onClick={() => eliminarServicio(servicio.id)}
                                     className="font-bold text-red-500">Eliminar</button>
                                 </div>
-                            ))}
+                            ))*/}
                         </div>
                     </div>
                     <div className="flex flex-col gap-5">
@@ -206,7 +249,7 @@ export default function CitaPage({params}){
                         <button onClick={actualizarLista} className="bg-zinc-800 p-3 rounded-xl text-white">Añadir</button>
                     </div>
                     
-                    <button onClick={AgregarServicios} className="mt-5 border w-full rounded-xl p-2 bg-zinc-800 text-white">Actualizar Servicios</button>
+                    <button onClick={handleSubmit} className="mt-5 border w-full rounded-xl p-2 bg-zinc-800 text-white">Crear Cita</button>
                 </div>
             </div>
         </div>

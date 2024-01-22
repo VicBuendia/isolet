@@ -15,10 +15,6 @@ export default function EmpleadoCard(props) {
 
       </div>
 
-      <div>
-        <button>Borrar</button>
-
-      </div>
 
     </Link>
   )
